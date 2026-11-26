@@ -1,0 +1,56 @@
+.workspace { display: grid; grid-template-columns: minmax(10.4rem, 13vw) minmax(0, 1fr); min-height: 100vh; }
+.rail { background: var(--green); color: var(--paper); padding: 2.2rem 1rem; display: flex; flex-direction: column; gap: 2.4rem; }
+.brand { text-decoration: none; color: inherit; display: grid; gap: 0.15rem; font: 1.25rem var(--serif); }
+.brand small, .operator small { color: oklch(0.86 0.05 121); }
+.stem { color: oklch(0.84 0.086 120); font-size: 3rem; line-height: 1; }
+.rail nav { display: grid; gap: 0.2rem; }
+.rail nav a { color: var(--paper); padding: 0.6rem 0.55rem; text-decoration: none; border-bottom: 1px solid oklch(0.57 0.061 135); }
+.rail nav a[aria-current] { background: oklch(0.49 0.071 140); font-weight: 700; }
+.operator { margin-top: auto; display: grid; justify-items: start; font-size: 0.78rem; gap: 0.18rem; }
+#content { padding: clamp(1rem, 3vw, 3.4rem); width: min(100%, 103rem); margin-inline: auto; }
+.workspace-heading { border-bottom: 2px solid var(--line); margin: 0 0 1.15rem; padding: 0 1rem 0.64rem 0; }
+.workspace-heading > p:last-child { color: var(--muted); }
+.desk { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(14rem, 1fr); gap: clamp(0.78rem, 2vw, 1.9rem); align-items: start; }
+.paper-form, .margin-note { border-top: 5px solid var(--green); padding: 1rem; background: var(--paper); min-width: 0; }
+.margin-note { border-top-color: var(--rust); }
+.paper-form h2:not(:first-child) { margin-top: 1.5rem; }
+.specimen { position: relative; display: grid; grid-template-columns: minmax(6.5rem, 0.45fr) minmax(0, 1fr); gap: 1.15rem; border: 1px solid var(--line); background: var(--paper); padding: 1rem; margin-bottom: 1rem; }
+.specimen::after { content: ''; background: oklch(0.89 0.073 98 / 0.75); width: 4.6rem; height: 0.6rem; position: absolute; top: -0.28rem; right: 1rem; transform: rotate(-4deg); }
+.tag { display: grid; align-content: center; gap: 0.18rem; justify-items: center; background: var(--leaf); padding: 0.7rem; color: var(--green); }
+.tag strong { font-size: clamp(1rem, 2vw, 1.75rem); letter-spacing: 0.08em; }
+.hole { width: 0.5rem; height: 0.5rem; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); }
+.specimen-details a { font-size: 0.85rem; margin-left: 0.5rem; }
+dt { color: var(--muted); font-size: 0.78rem; }
+dd { margin: 0; font-weight: 600; }
+.specimen dl, .release-overview { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+details { color: var(--muted); font-size: 0.85rem; margin-top: 0.7rem; }
+details summary { cursor: pointer; }
+.filter { display: flex; align-items: center; }
+.filter select { max-width: 16rem; }
+.login-layout { display: grid; grid-template-columns: 1.25fr 0.86fr; min-height: 100vh; }
+.cover { padding: clamp(2rem, 8vw, 8rem); background: var(--green); color: var(--paper); display: grid; align-content: center; justify-items: start; position: relative; }
+.cover .label { color: oklch(0.9 0.075 115); }
+.cover h1 { font-size: clamp(2.6rem, 6vw, 6.25rem); }
+.cover > p:last-of-type { max-width: 21rem; font-size: clamp(1rem, 1.5vw, 1.35rem); }
+.cover-stem { font-size: clamp(3rem, 7vw, 8rem); margin-bottom: 1rem; }
+.cover-tape { background: oklch(0.86 0.09 89); width: 4.7rem; height: 1rem; transform: rotate(-8deg); margin-top: 1.4rem; }
+.login-panel { align-self: center; padding: clamp(1.4rem, 5vw, 5rem); max-width: 34rem; width: 100%; }
+.login-panel h2 { font-size: 1.68rem; }
+.fine-print { font-size: 0.85rem; color: var(--muted); margin-top: 1.4rem; }
+.page-error { margin: 2rem auto; max-width: 45rem; }
+
+@media (max-width: 1279px) {
+  .desk { grid-template-columns: minmax(0, 1.25fr) minmax(14rem, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .workspace, .login-layout, .desk { display: block; }
+  .rail { padding: 0.8rem; gap: 0.6rem; }
+  .brand { display: flex; align-items: center; gap: 0.5rem; }
+  .brand .stem { font-size: 1.4rem; }
+  .rail nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .rail nav a { font-size: 0.74rem; padding: 0.38rem 0.25rem; }
+  .operator { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  #content { padding: 1rem; }
+  aside.paper-form, aside.margin-note { margin-top: 0.9rem; }
+}

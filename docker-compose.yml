@@ -1,0 +1,85 @@
+name: glasshouse-light-cal
+x-python: &python
+  build: ./backend
+  image: ${COMPOSE_PROJECT_NAME:-glasshouse-light-cal}-python:local
+  environment:
+    DB_HOST: db
+    MYSQL_DATABASE: ${MYSQL_DATABASE:-light_cal}
+    MYSQL_USER: ${MYSQL_USER:-light_lab}
+    MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-light-lab}
+    JWT_SECRET: ${JWT_SECRET:-local-greenhouse-light-cal-signing-secret}
+    REDIS_URL: redis://redis:6379/0
+    SEED_DEMO: ${SEED_DEMO:-true}
+    OMP_NUM_THREADS: '1'
+    OPENBLAS_NUM_THREADS: '1'
+  volumes:
+    - calibration-artifacts:/srv/light
+  depends_on:
+    db: {condition: service_healthy}
+    redis: {condition: service_healthy}
+services:
+  frontend:
+    build: ./frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-glasshouse-light-cal}-frontend
+    ports: ['127.0.0.1:${FRONTEND_PORT:-18301}:80']
+    depends_on:
+      backend: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1/api/health']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  backend:
+    <<: *python
+    container_name: ${COMPOSE_PROJECT_NAME:-glasshouse-light-cal}-backend
+    ports: ['127.0.0.1:${BACKEND_PORT:-19301}:8000']
+    command: [uvicorn, lab.app:app, --host, 0.0.0.0, --port, '8000']
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 3s
+      timeout: 3s
+      retries: 24
+  worker:
+    <<: *python
+    container_name: ${COMPOSE_PROJECT_NAME:-glasshouse-light-cal}-worker
+    command: [python, -m, lab.worker]
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      backend: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "from pathlib import Path; import time; assert 0 <= time.time()-Path('/tmp/light-worker-heartbeat').stat().st_mtime < 20"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  db:
+    image: mysql:8.0
+    container_name: ${COMPOSE_PROJECT_NAME:-glasshouse-light-cal}-db
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-light_cal}
+      MYSQL_USER: ${MYSQL_USER:-light_lab}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-light-lab}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-light-root}
+    ports: ['127.0.0.1:${DB_PORT:-17801}:3306']
+    volumes:
+      - light-db:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, 'mysql --protocol=TCP -h 127.0.0.1 -u"$$MYSQL_USER" -p"$$MYSQL_PASSWORD" "$$MYSQL_DATABASE" -Nse "SELECT 1" >/dev/null 2>&1']
+      interval: 3s
+      timeout: 4s
+      retries: 35
+  redis:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-glasshouse-light-cal}-redis
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - light-redis:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 3s
+      timeout: 3s
+      retries: 18
+volumes:
+  light-db:
+  light-redis:
+  calibration-artifacts:
