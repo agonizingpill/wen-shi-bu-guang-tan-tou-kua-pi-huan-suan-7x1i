@@ -37,7 +37,7 @@ input, select { border: 1px solid var(--line); background: oklch(0.99 0.01 96); 
 .form-error:empty { display: none; }
 .notice, .page-error, .empty { border-left: 3px solid var(--green); padding: 0.6rem 0.9rem; background: var(--leaf); }
 .state { font-size: 0.75rem; color: var(--green); background: var(--leaf); border: 1px solid var(--line); padding: 0.18em 0.52em; display: inline-block; white-space: nowrap; }
-.state-draft, .state-queued, .state-ready { background: oklch(0.92 0.072 91); }
-.state-rejected, .state-discarded, .state-暂停 { color: var(--rust); background: oklch(0.93 0.045 54); }
+.state-draft, .state-queued, .state-ready, .state-awaiting_recapture { background: oklch(0.92 0.072 91); }
+.state-rejected, .state-discarded, .state-recalled { color: var(--rust); background: oklch(0.93 0.045 54); }
 .state-retired { background: var(--canvas); }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }

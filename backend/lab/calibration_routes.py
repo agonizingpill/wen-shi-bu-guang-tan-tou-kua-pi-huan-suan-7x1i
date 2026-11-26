@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 from .auth import Current, Db, Supervisor, Technician
-from .calibration_models import Calibration, ReleaseSlot
+from .calibration_models import Calibration, FitAttempt, ReleaseSlot
 from .calibration_schema import FitRequest
-from .calibration_service import create_candidate, map_calibration, publish
+from .calibration_service import create_candidate, map_attempt, map_calibration, publish
 
 router = APIRouter(prefix="/calibrations", tags=["分位系数"])
 
@@ -29,6 +29,14 @@ def version(calibration_id: int, db: Db, _operator: Current):
     if row is None:
         raise HTTPException(404, "找不到换算候选。")
     return map_calibration(row)
+
+
+@router.get("/{calibration_id}/attempts")
+def attempts(calibration_id: int, db: Db, _operator: Current):
+    if db.get(Calibration, calibration_id) is None:
+        raise HTTPException(404, "找不到换算候选。")
+    query = select(FitAttempt).where(FitAttempt.calibration_id == calibration_id).order_by(FitAttempt.id.desc())
+    return [map_attempt(row) for row in db.scalars(query)]
 
 
 @router.post("", status_code=202)

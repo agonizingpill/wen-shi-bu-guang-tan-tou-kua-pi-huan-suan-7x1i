@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import JSON, CheckConstraint, Date, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -27,6 +27,9 @@ class ReferenceSegment(Base):
     points: Mapped[list["ReferencePoint"]] = relationship(
         cascade="all, delete-orphan", order_by="ReferencePoint.offset_seconds", lazy="selectin",
     )
+    recalls: Mapped[list["SegmentRecall"]] = relationship(
+        cascade="all, delete-orphan", order_by="SegmentRecall.id.desc()", lazy="selectin",
+    )
 
 
 class ReferencePoint(Base):
@@ -42,3 +45,18 @@ class ReferencePoint(Base):
     offset_seconds: Mapped[int] = mapped_column(Integer)
     raw_lux: Mapped[float] = mapped_column(Float)
     reference_lux: Mapped[float] = mapped_column(Float)
+
+
+class SegmentRecall(Base):
+    """撤回见证的留档：原读数与签字保留供复核，补采覆盖后依然可查。"""
+
+    __tablename__ = "segment_recalls"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    segment_id: Mapped[int] = mapped_column(ForeignKey("reference_segments.id"), index=True)
+    witnessed_by: Mapped[str | None] = mapped_column(String(32))
+    witness_note: Mapped[str | None] = mapped_column(String(180))
+    points: Mapped[list] = mapped_column(JSON)
+    recalled_by: Mapped[str] = mapped_column(String(32))
+    recall_note: Mapped[str] = mapped_column(String(180))
+    recalled_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

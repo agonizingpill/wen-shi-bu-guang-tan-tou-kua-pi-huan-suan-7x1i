@@ -24,6 +24,15 @@ def require_coverage(start, end, segments):
         raise InvalidReference(f"基准见证覆盖断档：{'、'.join(absent)}。现行换算保留。")
 
 
+def samples_of(segments):
+    return [(s.start_minute, p.offset_seconds, p.raw_lux, p.reference_lux)
+            for s in segments for p in s.points]
+
+
+def sample_digest(segments):
+    return sha256(json.dumps(samples_of(segments), separators=(",", ":")).encode()).hexdigest()
+
+
 def _quantiles(values, levels):
     return QuantileTransformer(
         n_quantiles=levels, output_distribution="uniform", subsample=None, random_state=MODEL_SEED,
@@ -42,8 +51,7 @@ def adjust(model, raw_values):
 
 
 def build_mapping(segments):
-    samples = [(s.start_minute, p.offset_seconds, p.raw_lux, p.reference_lux)
-               for s in segments for p in s.points]
+    samples = samples_of(segments)
     val_offsets = {(s.start_minute, s.points[-1].offset_seconds) for s in segments}
     training = [(raw, ref) for start, offset, raw, ref in samples if (start, offset) not in val_offsets]
     validation = [(raw, ref) for start, offset, raw, ref in samples if (start, offset) in val_offsets]
@@ -64,7 +72,7 @@ def build_mapping(segments):
         "reference_knots": reference_quantile.quantiles_[:, 0].tolist(),
         "probabilities": raw_quantile.references_.tolist(),
         "train_count": len(training), "validation_count": len(validation),
-        "input_sha256": sha256(json.dumps(samples, separators=(",", ":")).encode()).hexdigest(),
+        "input_sha256": sample_digest(segments),
         "paired_pearson": round(float(corr), 6),
     }
     model["mae_raw_lux"] = round(float(np.mean(np.abs(check_raw - check_ref))), 3)

@@ -1,10 +1,19 @@
 import {empty, modeOptions, plotHeader, probeOptions, status} from '../components/common.js';
 import {pairedPlot} from '../components/chart.js';
 import {pairValues, pointEditor} from '../components/pointEditor.js';
-import {modes, referenceDay} from '../constants.js';
+import {modes, referenceDay, states} from '../constants.js';
 import {clock, escape, minute} from '../utils/format.js';
 import {formData, handle, inlineError} from '../utils/form.js';
 import {api, notify, profile} from '../store.js';
+
+const stamp = value => (value || '').replace('T', ' ').slice(0, 16);
+
+function recallArchive(recalls) {
+  if (!recalls?.length) return '';
+  return `<details><summary>撤回留档 · ${recalls.length} 次（原读数与签字留作复核）</summary>
+    ${recalls.map(row => `<blockquote>撤回：${escape(row.recall_note)} · ${escape(row.recalled_by)} · ${escape(stamp(row.recalled_at))}<br>
+      原签字 ${escape(row.witnessed_by || '—')}：${escape(row.witness_note || '—')}（${row.point_count} 对读数存档）</blockquote>`).join('')}</details>`;
+}
 
 function segmentStrip(segment, probe, isSupervisor) {
   return `<article class="segment">
@@ -13,10 +22,14 @@ function segmentStrip(segment, probe, isSupervisor) {
     ${pairedPlot(segment.points)}
     <p class="source-file">${escape(segment.source)}</p>
     ${segment.witness_note ? `<blockquote>${escape(segment.witness_note)} ${segment.witnessed_by ? `· ${escape(segment.witnessed_by)}` : ''}</blockquote>` : ''}
+    ${recallArchive(segment.recalls)}
     ${isSupervisor && segment.state === 'draft' ? `<form data-witness="${segment.id}">
       <label>班长见证说明<input name="note" required minlength="4" placeholder="基准表同秒配对及架位确认"></label>
       <button type="submit" value="witness">签署见证</button>
       <button type="submit" value="discard" class="secondary">作废重采</button>${inlineError}</form>` : ''}
+    ${isSupervisor && segment.state === 'witnessed' ? `<form data-witness="${segment.id}">
+      <label>撤回说明<input name="note" required minlength="4" placeholder="基准表与探头对时偏差等复核依据"></label>
+      <button type="submit" value="recall" class="secondary">撤回见证</button>${inlineError}</form>` : ''}
   </article>`;
 }
 
@@ -41,7 +54,7 @@ export async function showSegments(root, context) {
         <label>基准表<input name="reference_serial" value="${escape(probe.reference_serial)}" required></label></div>
         <label>来源文件<input name="source" placeholder="east-1123-high-0630.csv" required></label>
         ${pointEditor()}<button type="submit">登记待见证段</button>${inlineError}</form></aside>` :
-        `<aside class="margin-note"><h2>覆盖规则</h2><p>覆盖以同一天、同一探头和同一档位的已见证记录计算。暗档记录不能借给亮档。</p></aside>`}
+        `<aside class="margin-note"><h2>覆盖规则</h2><p>覆盖以同一天、同一探头和同一档位的已见证记录计算。暗档记录不能借给亮档。班长可撤回对时有偏差的见证段，补采见证齐全后原候选自动重算。</p></aside>`}
     </div>`;
   root.querySelector('#filter-probe').addEventListener('change', event => {
     location.hash = event.target.value ? `segments?probe=${event.target.value}` : 'segments';
@@ -65,7 +78,7 @@ export async function showSegments(root, context) {
     form.addEventListener('submit', event => { form.dataset.action = event.submitter.value; });
     handle(form, async () => {
       const row = await api().witness(form.dataset.witness, form.elements.note.value, form.dataset.action);
-      notify(`${clock(row.start_minute)} · ${row.state === 'witnessed' ? '已见证' : '已作废'}`);
+      notify(`${clock(row.start_minute)} · ${states[row.state] || row.state}`);
       context.refresh();
     });
   }

@@ -22,6 +22,9 @@
 .version-tab { display: grid; justify-items: start; gap: 0.25rem; text-decoration: none; background: var(--paper); border-left: 3px solid var(--line); padding: 0.45rem; overflow-wrap: anywhere; }
 .version-tab.selected { background: var(--leaf); border-left-color: var(--green); }
 .results { color: var(--green); }
+.attempt-log ol { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+.attempt-log li { display: flex; gap: 0.55rem; align-items: baseline; padding: 0.34rem 0; border-bottom: 1px solid var(--line); }
+.attempt-log li p { margin: 0; font-size: 0.85rem; }
 .knot-figure figcaption { color: var(--muted); font-weight: 600; margin-bottom: 0.35rem; }
 .knot-figure ol { padding: 0; list-style: none; margin: 0; max-height: 18rem; overflow: auto; }
 .knot-figure li { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 1.5em minmax(0, 1fr); gap: 0.32rem; align-items: baseline; padding: 0.3rem 0.22rem; border-bottom: 1px solid var(--line); }
